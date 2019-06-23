@@ -1,5 +1,7 @@
 //includ chalk
 var chalk = require("chalk");
+//include moment
+var moment = require("moment");
 //include file stream
 //var fs = require("fs");
 //include axios to get api response
@@ -26,9 +28,13 @@ function readCommand(fileName) {
     var fs = require("fs");
     var cmd = fs.readFileSync(fileName).toString().split(",");
     //return the catalog and key word from txt file 
-    return {
-        fileKey: cmd[1],
-        fileCatalog: cmd[0]
+    if(cmd.length>2){
+        return "Can not do this"
+    }else{
+        return {
+            fileKey: cmd[1],
+            fileCatalog: cmd[0]
+        }
     }
 }
 function search(type, url) {
@@ -39,9 +45,7 @@ function search(type, url) {
         //check type to format json 
         //console.log(resp);
         if (type == "movie") {
-
             //movie format
-            //write log
             //     * Title of the movie.
             //    * Year the movie came out.
             //    * IMDB Rating of the movie.
@@ -50,38 +54,48 @@ function search(type, url) {
             //    * Language of the movie.
             //    * Plot of the movie.
             //    * Actors in the movie.
-
-            console.log(chalk.inverse("Title : " + resp.data.Title));
-            console.log(chalk.inverse("Released year : " + resp.data.Year));
-            console.log(chalk.inverse("IMDB rating : " + resp.data.imdbRating));
-            console.log(chalk.inverse(resp.data.Ratings[1].Source + " : " + resp.data.Ratings[1].Value));
-            console.log(chalk.inverse("Country : " + resp.data.Country));
-            console.log(chalk.inverse("Language : " + resp.data.Language));
-            console.log(chalk.inverse("Plot : " + resp.data.Plot));
-            console.log(chalk.inverse("Actors : " + resp.data.Actors));
-
+            if (resp.data.Response == "True") {
+                console.log(chalk.blue.bold("I found : "));
+                console.log(chalk.inverse("Title : " + resp.data.Title));
+                console.log(chalk.inverse("Released year : " + resp.data.Year));
+                console.log(chalk.inverse("IMDB rating : " + resp.data.imdbRating));
+                console.log(chalk.inverse(resp.data.Ratings[1].Source + " : " + resp.data.Ratings[1].Value));
+                console.log(chalk.inverse("Country : " + resp.data.Country));
+                console.log(chalk.inverse("Language : " + resp.data.Language));
+                console.log(chalk.inverse("Plot : " + resp.data.Plot));
+                console.log(chalk.inverse("Actors : " + resp.data.Actors));
+            } else {
+                console.log(chalk.red.bold("Movie not found!"));
+                console.log(chalk.blue.bold("I found you somthing instead : "));
+                //defautlt search
+                search("movie", key.omdb.prefix + "Mr. Nobody");
+            }
         } else if (type == "band") {
             //concert format
             // Name of the venue
             // Venue location
             // Date of the Event (use moment to format this as "MM/DD/YYYY")
             var data = resp.data;
-            if (data.length > 0) {
-                console.log(chalk.inverse("Upcoming events of your band : "));
-
-                for (var i = 0; i < data.length; i++) {
-                    //name
-                    console.log(chalk.inverse("Venue : " + data[i].venue.name));
-                    //location
-                    console.log(chalk.inverse("Venue location : " + data[i].venue.city + " " + data[i].venue.region + " " + data[i].venue.country));
-                    //date
-                    //moment
+            if (data != "\n{warn=Not found}\n") {
+                if (data.length > 0) {
+                    console.log(chalk.inverse("Upcoming events of your band : "));
+                    for (var i = 0; i < data.length; i++) {
+                        //name
+                        console.log(chalk.inverse("Venue : " + data[i].venue.name));
+                        //location
+                        console.log(chalk.inverse("Venue location : " + data[i].venue.city + " " + data[i].venue.region + " " + data[i].venue.country));
+                        //date
+                        //moment    2019-06-28T19:00:52
+                        //console.log(data[i].datetime.split("T"));
+                        console.log(chalk.inverse("Date : " + data[i].datetime.split("T")[1] + " on " + moment(data[i].datetime.split("T")[0]).format("MM/DD/YYYY")));
+                    }
+                } else {
+                    //no events
+                    console.log(chalk.inverse("No upcomging event!"));
                 }
             } else {
-                console.log("no events upcoming");
-
+                console.log(chalk.red.bold("Can not find your band!"));
             }
-
         } else {
             return console.log("wrong type");
         }
@@ -96,43 +110,34 @@ function searchSpotify(keyWord) {
         if (err) {
             return console.log(err + "from spotify api");
         }
-        //console.log(data);
         //display data here
         // Artist(s)
         // The song's name
         // A preview link of the song from Spotify
         // The album that the song is from
         // If no song is provided then your program will default to "The Sign" by Ace of Base.
-
-        //console.log(data.tracks.items[0]);
         var tracks = data.tracks.items;
         if (tracks.length > 0) {
-
+            console.log(chalk.blue.bold("I found : "));
             for (var i = 0; i < tracks.length; i++) {
-                    //artists
-                    console.log(chalk.inverse("Artist(s) : "));
-                    let artists = tracks[i].artists;
-                    for (var j = 0; j < artists.length; j++) {
-                        console.log(chalk.inverse(artists[j].name));
-                    }
-                    //name
-                    console.log(chalk.inverse("Song : " + tracks[i].name));
-
-                    //preview
-                    console.log(chalk.inverse("Preview link : " + tracks[i].preview_url));
-
-                    //album
-                    console.log(chalk.inverse("Album : " + tracks[i].album.name));
-                
-
+                //artists
+                console.log(chalk.inverse("Artist(s) : "));
+                let artists = tracks[i].artists;
+                for (var j = 0; j < artists.length; j++) {
+                    console.log(chalk.inverse(artists[j].name));
                 }
-            
+                //name
+                console.log(chalk.inverse("Song : " + tracks[i].name));
+                //preview
+                console.log(chalk.inverse("Preview link : " + tracks[i].preview_url));
+                //album
+                console.log(chalk.inverse("Album : " + tracks[i].album.name));
+            }
         } else {
-            console.log(chalk.red.bold("Can not find any song named "+keyWord+" for you."));
+            console.log(chalk.red.bold("Can not find any song named " + keyWord + " for you."));
             console.log(chalk.blue.bold("I found 'The Sign' for you."));
             searchSpotify("The Sign");
         }
-
     });
 }
 //check type and form queryurl with keyword
@@ -156,7 +161,6 @@ function checkCatalog(str1, str2) {
                 } else {
                     writeLog("Search " + str1 + " by " + str2 + " at ", "fail");
                 }
-
                 break;
             case "band":
                 query = key.bit.prefix + str1 + key.bit.id;
@@ -168,29 +172,32 @@ function checkCatalog(str1, str2) {
                 break;
             case "file":
                 //read file function
-                console.log(chalk.blue.bold("Lori is reading the file."));
-                var fileCommand = readCommand(str1);
-                //checkCatalog(fileCommand.fileKey,fileCommand.fileCatalog);
-                if (checkCatalog(fileCommand.fileKey, fileCommand.fileCatalog)) {
-                    writeLog("Search " + str1 + " by " + sr2 + " at ", "success");
+                if (str2.split(".")[1] == "txt") {//correct file
+                    console.log(chalk.blue.bold("Lori is reading the file."));
+                    var fileCommand = readCommand(str1);
+                    //checkCatalog(fileCommand.fileKey,fileCommand.fileCatalog);
+                    if(fileCommand != "Can not do this"){
+                        checkCatalog(fileCommand.fileKey, fileCommand.fileCatalog);
+                        writeLog("Search " + str1 + " by " + sr2 + " at ", "success");
+                    }else{
+                        writeLog("Search " + str1 + " by " + str2 + " at ", "fail");
+                    }
                 } else {
-                    writeLog("Search " + str1 + " by " + str2 + " at ", "fail");
+                    console.log(chalk.red.bold("Cannot read file " + str1));
                 }
                 break;
             default://in case in put from expand went wrong //not necessary
                 //save failure info to log
-                console.log("I cannot search for " + str2);
-                console.log("Please wait for further update");
+                console.log(chalk.red.bold("I cannot search for " + str2));
+                console.log(chalk.red.bold("Please wait for further update"));
                 writeLog("Search " + str1 + " by " + str2 + " at ", "fail");
                 welcome();//go back to main function if input from last prompt goes wrong
         }
-
     } else {
         console.log(chalk.blue.bold("Thank you for using Lori the Bot!"));
     }
 }
 //main function 
-//
 function welcome() {
     console.log(chalk.blue.bold("What can I do for you?"));
     console.log(chalk.blue.bold("You can quit the bot at anytime by typing in \'quit\'."));
@@ -237,7 +244,6 @@ function welcome() {
                 }).then((answer) => {
                     if (answer.catalog != "quit") {//user input not to quit
                         checkCatalog(key, answer.catalog);
-                        //
                         inquirer.prompt({//ask user to continue or not
                             type: "confirm",
                             name: "again",
@@ -255,7 +261,6 @@ function welcome() {
             } else {
                 console.log(chalk.red.bold("Please enter something!"));
                 welcome();
-
             }
         } else {//quit
             console.log(chalk.blue.bold("Thank you for using Lori the Bot!"));
