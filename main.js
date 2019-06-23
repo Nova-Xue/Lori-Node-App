@@ -1,5 +1,7 @@
 //includ chalk
 var chalk = require("chalk");
+//include file stream
+var fs = require("fs")
 //include axios to get api response
 var axios = require("axios");
 //include node-spotify-api
@@ -11,11 +13,47 @@ require("dotenv").config();
 //get api key from key.js
 var key = require("./key.js");
 //search with queryurl and display by type
+function writeLog(action,status){
+    fs.appendFileSync("log.txt",action+new Date()+status+" | ",function(err){
+        if(err){
+            console.log(err);
+        }
+    });
+}
+function readCommand(fileName){
+    //read the file
+    var keyWord;
+    var catalog;
+    fs.readFileSync(fileName,"utf-8",function(err,data){
+        if(err){
+            console.log("cannot read file "+ fileName);
+        }
+        console.log(data);
+        //deal with data
+        var command = data.split(",");
+        catalog = command[0];
+        keyWord = command[1];
+
+    });
+    return {
+        keyword : keyWord,
+        catalog : catalog
+    }
+}
 function search(type, url) {
     //get response
     axios.get(url).then((resp) => {
         console.log(resp);
         //display response here
+        //check type to format json 
+        if(type == "movie"){
+            //movie format
+        }else if(type == "band"){
+            //concert format
+        }else{
+            return console.log("wrong type");
+        }
+        //save to log.txt
     });
 }
 function searchSpotify(keyWord) {
@@ -31,10 +69,10 @@ function searchSpotify(keyWord) {
     }, function (err, data) {
         if (err) {
             return console.log(err + "from spotify api");
-
         }
         console.log(data);
         //display data here
+        //save search action to log.txt
     });
 }
 //check type and form queryurl with keyword
@@ -48,13 +86,21 @@ function checkCatalog(str1, str2) {
                 break;
             case "movie":
                 query = "http://www.omdbapi.com/?i=tt3896198&apikey=cc25cce6&t=" + str1;
-                search(str1, query);
+                search(str2, query);
                 break;
             case "band":
                 query = "https://rest.bandsintown.com/artists/" + str1 + "/events?app_id=56dd8586-3ef3-4a59-aead-f3c9135af348";
-                search(str1, query);
+                search(str2, query);
+                break;
+            case "file":
+                //read file function
+                console.log("Lori is reading the file");
+                var fileCommand = readCommand(str1);
+                checkCatalog(fileCommand.keyword,fileCommand.catalog);
+                //execute command function 
                 break;
             default://in case in put from expand went wrong //not necessary
+                //save failure info to log
                 console.log("I cannot search for " + str2);
                 console.log("Please wait for further update");
                 welcome();//go back to main function if input from last prompt goes wrong
@@ -67,19 +113,19 @@ function checkCatalog(str1, str2) {
 //main function 
 function welcome() {
     console.log("What can I do for you?");
-    console.log("You can quit the bot at anytime just typing in \'quit\'.");
+    console.log("You can quit the bot at anytime by typing in \'quit\'.");
     inquirer.prompt({//ask for key
         tyep: "input",
         name: "search",
-        message: "Search for something :",
-        default: "A song, a movie, or your favorite band"
+        message: "Search for something or read command from a file:",
+        default: "A song, a movie, your favorite band or a file name"
     }).then((answer) => {
         if (answer.search != "quit") {
             let key = answer.search;
             inquirer.prompt({//ask for type//single choice
                 type: "expand",
                 name: "catalog",
-                message: "Is " + key + " a song, a movie or a band? (You can type q to quit)",
+                message: "Is " + key + " a song, a movie, a band or a file? (You can type q to quit)",
                 choices: [
                     {
                         key: "s",
@@ -95,6 +141,11 @@ function welcome() {
                         key: "b",
                         name: "Band",
                         value: "band"
+                    },
+                    {
+                        key: "F",
+                        name: "File",
+                        value: "file"
                     },
                     {//q to quit
                         key: "Q",
