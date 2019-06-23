@@ -14,7 +14,8 @@ require("dotenv").config();
 var key = require("./key.js");
 //search with queryurl and display by type
 function writeLog(action,status){
-    fs.appendFileSync("log.txt",action+new Date()+status+" | ",function(err){
+    var fs = require("fs");//include fs to append file
+    fs.appendFile("log.txt",action+new Date()+status+" | ",function(err){
         if(err){
             console.log(err);
         }
@@ -24,7 +25,7 @@ function readCommand(fileName){
     //read the file
     var fs = require("fs");
     var cmd = fs.readFileSync(fileName).toString().split(",");
-    //console.log(cmd);
+    //return the catalog and key word from txt file 
     return {
         fileKey : cmd[1],
         fileCatalog : cmd[0]
@@ -38,6 +39,8 @@ function search(type, url) {
         //check type to format json 
         if(type == "movie"){
             //movie format
+            //write log
+            
         }else if(type == "band"){
             //concert format
         }else{
@@ -47,11 +50,6 @@ function search(type, url) {
     });
 }
 function searchSpotify(keyWord) {
-    //search spotify for a track
-    // {
-    //     id : process.env.SPOTIFY_ID,
-    //     secret : process.env.SPOTIFY_SECRECT
-    // }
     var spotify = new Spotify(key.spotify);
     spotify.search({//search for a track
         type: "track",
@@ -66,32 +64,52 @@ function searchSpotify(keyWord) {
     });
 }
 //check type and form queryurl with keyword
+//write log when the search is done
 function checkCatalog(str1, str2) {
     if (str2 != "quit") {//quit when user inputs 'quit'
         console.log("Lori is searching for " + str1);
         var query;
         switch (str2) {
             case "song":
-                searchSpotify(str1);
+                if(searchSpotify(str1)){
+                    writeLog("Search "+str1+" by "+str2 +" at ","success");
+                }else{
+                    writeLog("Search "+str1+" by "+str2 +" at ","fail");
+                }
                 break;
             case "movie":
                 query = key.omdb.prefix + str1;
-                search(str2, query);
+                if(search(str2, query)){
+                    writeLog("Search "+str1+" by "+str2 +" at ","success");
+                }else{
+                    writeLog("Search "+str1+" by "+str2 +" at ","fail");
+                }
+                
                 break;
             case "band":
                 query = key.bit.prefix + str1 + key.bit.id;
-                search(str2, query);
+                if(search(str2, query)){
+                    writeLog("Search "+str1+" by "+str2 +" at ","success");
+                }else{
+                    writeLog("Search "+str1+" by "+str2 +" at ","fail");
+                }
                 break;
             case "file":
                 //read file function
                 console.log("Lori is reading the file");
                 var fileCommand = readCommand(str1);
-                checkCatalog(fileCommand.fileKey,fileCommand.fileCatalog);
+                //checkCatalog(fileCommand.fileKey,fileCommand.fileCatalog);
+                if(checkCatalog(fileCommand.fileKey,fileCommand.fileCatalog)){
+                    writeLog("Search "+str1+" by "+sr2 +" at ","success");
+                }else{
+                    writeLog("Search "+str1+" by "+str2 +" at ","fail");
+                }
                 break;
             default://in case in put from expand went wrong //not necessary
                 //save failure info to log
                 console.log("I cannot search for " + str2);
                 console.log("Please wait for further update");
+                writeLog("Search "+str1+" by "+str2 +" at ","fail");
                 welcome();//go back to main function if input from last prompt goes wrong
         }
 
