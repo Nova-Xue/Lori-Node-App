@@ -85,11 +85,13 @@ function checkCatalog(str1, str2) {
                 searchSpotify(str1);
                 break;
             case "movie":
-                query = "http://www.omdbapi.com/?i=tt3896198&apikey=cc25cce6&t=" + str1;
+                query = key.omdb.prefix + str1;
                 search(str2, query);
                 break;
             case "band":
-                query = "https://rest.bandsintown.com/artists/" + str1 + "/events?app_id=56dd8586-3ef3-4a59-aead-f3c9135af348";
+                query = key.bit.prefix + str1 + key.bit.id;
+                console.log(query);
+                
                 search(str2, query);
                 break;
             case "file":
