@@ -2,8 +2,6 @@
 var chalk = require("chalk");
 //include moment
 var moment = require("moment");
-//include file stream
-//var fs = require("fs");
 //include axios to get api response
 var axios = require("axios");
 //include node-spotify-api
@@ -14,7 +12,7 @@ var inquirer = require("inquirer");
 require("dotenv").config();
 //get api key from key.js
 var key = require("./key.js");
-//search with queryurl and display by type
+//write log every time there is a search
 function writeLog(action, status) {
     var fs = require("fs");//include fs to append file
     fs.appendFile("log.txt", action + new Date() + status + " | ", function (err) {
@@ -23,6 +21,7 @@ function writeLog(action, status) {
         }
     });
 }
+//fs to read command from the user input filename
 function readCommand(fileName) {
     //read the file
     var fs = require("fs");
@@ -37,6 +36,7 @@ function readCommand(fileName) {
         }
     }
 }
+//axios to get response and format the display
 function search(type, url) {
     //get response
     axios.get(url).then((resp) => {
@@ -101,6 +101,7 @@ function search(type, url) {
         }
     });
 }
+//spotify api and format display
 function searchSpotify(keyWord) {
     var spotify = new Spotify(key.spotify);
     spotify.search({//search for a track
