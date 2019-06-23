@@ -143,7 +143,6 @@ function searchSpotify(keyWord) {
 //check type and form queryurl with keyword
 //write log when the search is done
 function checkCatalog(str1, str2) {
-    if (str2 != "quit") {//quit when user inputs 'quit'
         console.log(chalk.blue.bold("Lori is searching for ") + chalk.green.bold(str1) + chalk.blue.bold("."));
         var query;
         switch (str2) {
@@ -193,9 +192,6 @@ function checkCatalog(str1, str2) {
                 writeLog("Search " + str1 + " by " + str2 + " at ", "fail");
                 welcome();//go back to main function if input from last prompt goes wrong
         }
-    } else {
-        console.log(chalk.blue.bold("Thank you for using Lori the Bot!"));
-    }
 }
 //main function 
 function welcome() {
