@@ -7,8 +7,9 @@ var Spotify = require("node-spotify-api");
 //include inquirer for interaction
 var inquirer = require("inquirer");
 //include dotenv to save api keys locally
-var dotenv = require("dotenv");
-dotenv.config();
+require("dotenv").config();
+//get api key from key.js
+var key = require("./key.js");
 //search with queryurl and display by type
 function search(type, url) {
     //get response
@@ -17,15 +18,16 @@ function search(type, url) {
         //display response here
     });
 }
-function searchSpotify(key) {
+function searchSpotify(keyWord) {
     //search spotify for a track
-    var spotify = new Spotify({//client id and client secret
-        id: "a4ec742060a148fc9808f641297cd218",
-        secret: "a3e09f3d409b4a7ebafa53ae0c963263"
-    });
+    // {
+    //     id : process.env.SPOTIFY_ID,
+    //     secret : process.env.SPOTIFY_SECRECT
+    // }
+    var spotify = new Spotify(key.spotify);
     spotify.search({//search for a track
         type: "track",
-        query: key
+        query: keyWord
     }, function (err, data) {
         if (err) {
             return console.log(err + "from spotify api");
@@ -103,6 +105,7 @@ function welcome() {
             }).then((answer) => {
                 if (answer.catalog != "quit") {//user input not to quit
                     checkCatalog(key, answer.catalog);
+                    //
                     inquirer.prompt({//ask user to continue or not
                         type: "confirm",
                         name: "again",
