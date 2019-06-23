@@ -1,7 +1,7 @@
 //includ chalk
 var chalk = require("chalk");
 //include file stream
-var fs = require("fs")
+//var fs = require("fs");
 //include axios to get api response
 var axios = require("axios");
 //include node-spotify-api
@@ -22,22 +22,12 @@ function writeLog(action,status){
 }
 function readCommand(fileName){
     //read the file
-    var keyWord;
-    var catalog;
-    fs.readFileSync(fileName,"utf-8",function(err,data){
-        if(err){
-            console.log("cannot read file "+ fileName);
-        }
-        console.log(data);
-        //deal with data
-        var command = data.split(",");
-        catalog = command[0];
-        keyWord = command[1];
-
-    });
+    var fs = require("fs");
+    var cmd = fs.readFileSync(fileName).toString().split(",");
+    //console.log(cmd);
     return {
-        keyword : keyWord,
-        catalog : catalog
+        fileKey : cmd[1],
+        fileCatalog : cmd[0]
     }
 }
 function search(type, url) {
@@ -90,16 +80,13 @@ function checkCatalog(str1, str2) {
                 break;
             case "band":
                 query = key.bit.prefix + str1 + key.bit.id;
-                console.log(query);
-                
                 search(str2, query);
                 break;
             case "file":
                 //read file function
                 console.log("Lori is reading the file");
                 var fileCommand = readCommand(str1);
-                checkCatalog(fileCommand.keyword,fileCommand.catalog);
-                //execute command function 
+                checkCatalog(fileCommand.fileKey,fileCommand.fileCatalog);
                 break;
             default://in case in put from expand went wrong //not necessary
                 //save failure info to log
