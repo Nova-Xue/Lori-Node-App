@@ -172,7 +172,7 @@ function checkCatalog(str1, str2) {
                 break;
             case "file":
                 //read file function
-                if (str2.split(".")[1] == "txt") {//correct file
+                if (str2.split(".")[1] == "txt") {//check suffix 
                     console.log(chalk.blue.bold("Lori is reading the file."));
                     var fileCommand = readCommand(str1);
                     //checkCatalog(fileCommand.fileKey,fileCommand.fileCatalog);
@@ -256,6 +256,8 @@ function welcome() {
                                 console.log(chalk.blue.bold("Thank you for using Lori the Bot!"));
                             }
                         });
+                    }else{//quit
+                        console.log(chalk.blue.bold("Thank you for using Lori the Bot!"));
                     }
                 });
             } else {
