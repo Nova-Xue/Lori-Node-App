@@ -2,17 +2,37 @@
 var chalk = require("chalk");
 //include axios to get api response
 var axios = require("axios");
+//include node-spotify-api
+var Spotify = require("node-spotify-api");
 //include inquirer for interaction
 var inquirer = require("inquirer");
 //include dotenv to save api keys locally
 var dotenv = require("dotenv");
 dotenv.config();
 //search with queryurl and display by type
-function search(type,url) {
+function search(type, url) {
     //get response
     axios.get(url).then((resp) => {
         console.log(resp);
         //display response here
+    });
+}
+function searchSpotify(key) {
+    //search spotify for a track
+    var spotify = new Spotify({//client id and client secret
+        id: "a4ec742060a148fc9808f641297cd218",
+        secret: "a3e09f3d409b4a7ebafa53ae0c963263"
+    });
+    spotify.search({//search for a track
+        type: "track",
+        query: key
+    }, function (err, data) {
+        if (err) {
+            return console.log(err + "from spotify api");
+
+        }
+        console.log(data);
+        //display data here
     });
 }
 //check type and form queryurl with keyword
@@ -22,20 +42,22 @@ function checkCatalog(str1, str2) {
         var query;
         switch (str2) {
             case "song":
-                query = "https://api.spotify.com/v1/search?q=" + str1;
+                searchSpotify(str1);
                 break;
             case "movie":
                 query = "http://www.omdbapi.com/?i=tt3896198&apikey=cc25cce6&t=" + str1;
+                search(str1, query);
                 break;
             case "band":
                 query = "https://rest.bandsintown.com/artists/" + str1 + "/events?app_id=56dd8586-3ef3-4a59-aead-f3c9135af348";
+                search(str1, query);
                 break;
             default://in case in put from expand went wrong //not necessary
                 console.log("I cannot search for " + str2);
                 console.log("Please wait for further update");
                 welcome();//go back to main function if input from last prompt goes wrong
         }
-        search(str2,query);
+
     } else {
         console.log("Thank you for using Lori the Bot!");
     }
@@ -58,17 +80,17 @@ function welcome() {
                 message: "Is " + key + " a song, a movie or a band? (You can type q to quit)",
                 choices: [
                     {
-                        key: "A",
+                        key: "s",
                         name: "Song",
                         value: "song"
                     },
                     {
-                        key: "B",
+                        key: "m",
                         name: "Movie",
                         value: "movie"
                     },
                     {
-                        key: "C",
+                        key: "b",
                         name: "Band",
                         value: "band"
                     },
