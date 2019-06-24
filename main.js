@@ -27,10 +27,10 @@ function readCommand(fileName) {
     var fs = require("fs");
     if(fs.existsSync(fileName)){//file exists
         var cmd = fs.readFileSync(fileName).toString().split(",");
-        if (cmd.length > 2) {
+        if (cmd.length > 2) {//command with wrong format
             cmdObj =  "I can not do this";
             writeLog("Search " + fileName + " by file at ", "fail");
-        } else {
+        } else {//correct command
             cmdObj = {
                 fileKey: cmd[1],
                 fileCatalog: cmd[0]
@@ -86,7 +86,7 @@ function search(key, type, url) {
             // Venue location
             // Date of the Event (use moment to format this as "MM/DD/YYYY")
             var data = resp.data;
-            if (data != "\n{warn=Not found}\n") {
+            if (data != "\n{warn=Not found}\n") {//band found
                 if (data.length > 0) {
                     console.log(chalk.inverse("Upcoming events of your band : "));
                     for (var i = 0; i < data.length; i++) {
@@ -101,16 +101,15 @@ function search(key, type, url) {
                         console.log(chalk.inverse("-------------------------------------------"));
                     }
                     writeLog("Search " + key + " by " + type + " at ", "success");
-                } else {
-                    //no events
+                } else {//no events
                     console.log(chalk.inverse("No upcomging event!"));
                     writeLog("Search " + key + " by " + type + " at ", "success");
                 }
-            } else {
+            } else {//band not found
                 console.log(chalk.red.bold("Can not find your band!"));
                 writeLog("Search " + key + " by " + type + " at ", "fail");
             }
-        } else {
+        } else {//
             console.log("wrong type");
             writeLog("Search " + key + " by " + type + " at ", "fail");
         }
@@ -133,7 +132,7 @@ function searchSpotify(keyWord, type) {
         // The album that the song is from
         // If no song is provided then your program will default to "The Sign" by Ace of Base.
         var tracks = data.tracks.items;
-        if (tracks.length > 0) {
+        if (tracks.length > 0) {//found song
             console.log(chalk.blue.bold("I found : "));
             for (var i = 0; i < tracks.length; i++) {
                 //artists
@@ -151,7 +150,7 @@ function searchSpotify(keyWord, type) {
                 console.log(chalk.inverse("-------------------------------------------"));
             }
             writeLog("Search " + keyWord + " by " + type + " at ", "success");
-        } else {
+        } else {//song not found
             console.log(chalk.red.bold("Can not find any song named " + keyWord + " for you."));
             writeLog("Search " + keyWord + " by " + type + " at ", "fail");
             //search default
@@ -183,18 +182,19 @@ function checkCatalog(str1, str2) {
                 console.log(chalk.blue.bold("Lori is reading the file."));
                 var fileCommand = readCommand(str1);
                 if(typeof fileCommand == "string"){
+                    //string can be  "I can not do this " or "I cannot find the file"
                     console.log(chalk.red.bold(fileCommand));
-                }else{//cmdObj
+                }else{//cmdObj correct cmd with type and key
                     checkCatalog(fileCommand.fileKey,fileCommand.fileCatalog);
                 }
             }
-            else {
+            else {//not a file
                 console.log(chalk.red.bold("Cannot read file " + str1));
                 writeLog("Search " + str1 + " by " + str2 + " at ", "fail");
             }
 
             break;
-        default://in case in put from expand went wrong //not necessary
+        default://in case input went wrong //not necessary
             //save failure info to log
             console.log(chalk.red.bold("I cannot search for " + str2));
             console.log(chalk.red.bold("Please wait for further update"));
@@ -216,35 +216,11 @@ function welcome() {
             let key = answer.search;
             if (key != chalk.red.underline("A song, a movie, your favorite band or a file name")) {
                 inquirer.prompt({//ask for type//single choice
-                    type: "expand",
+                    type: "list",
                     name: "catalog",
-                    message: chalk.blue("Is ") + chalk.green(key) + chalk.blue(" a ") + chalk.yellow("song") + chalk.blue(", a ") + chalk.yellow("movie") + chalk.blue(", a ") + chalk.yellow("band") + chalk.blue(" or a ") + chalk.yellow("file") + chalk.blue("? ") + chalk.red.bold("(You can type q to quit,type h or enter for help)"),
+                    message: chalk.blue("Is ") + chalk.green(key) + chalk.blue(" a ") + chalk.yellow("song") + chalk.blue(", a ") + chalk.yellow("movie") + chalk.blue(", a ") + chalk.yellow("band") + chalk.blue(" or a ") + chalk.yellow("file") + chalk.blue("? "),
                     choices: [
-                        {
-                            key: "s",
-                            name: "Song",
-                            value: "song"
-                        },
-                        {
-                            key: "m",
-                            name: "Movie",
-                            value: "movie"
-                        },
-                        {
-                            key: "b",
-                            name: "Band",
-                            value: "band"
-                        },
-                        {
-                            key: "F",
-                            name: "File",
-                            value: "file"
-                        },
-                        {//q to quit
-                            key: "Q",
-                            name: "Quit",
-                            value: "quit"
-                        }
+                        "song","movie","band","file","quit"
                     ]
                 }).then((answer) => {
                     if (answer.catalog != "quit") {//user input not to quit
