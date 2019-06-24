@@ -25,19 +25,26 @@ function writeLog(action, status) {
 function readCommand(fileName) {
     //read the file
     var fs = require("fs");
-    var cmd = fs.readFileSync(fileName).toString().split(",");
-    //return the catalog and key word from txt file 
-    if(cmd.length>2){
-        return "Can not do this"
-    }else{
-        return {
-            fileKey: cmd[1],
-            fileCatalog: cmd[0]
+    if(fs.existsSync(fileName)){//file exists
+        var cmd = fs.readFileSync(fileName).toString().split(",");
+        if (cmd.length > 2) {
+            cmdObj =  "I can not do this";
+            writeLog("Search " + fileName + " by file at ", "fail");
+        } else {
+            cmdObj = {
+                fileKey: cmd[1],
+                fileCatalog: cmd[0]
+            }
         }
+    }else{//file not found
+        cmdObj = "I cannot find the file.";
+        writeLog("Search " + fileName + " by file at ", "fail");
     }
+    return cmdObj;
+    
 }
 //axios to get response and format the display
-function search(type, url) {
+function search(key, type, url) {
     //get response
     axios.get(url).then((resp) => {
         //console.log(resp);
@@ -64,11 +71,14 @@ function search(type, url) {
                 console.log(chalk.inverse("Language : " + resp.data.Language));
                 console.log(chalk.inverse("Plot : " + resp.data.Plot));
                 console.log(chalk.inverse("Actors : " + resp.data.Actors));
-            } else {
+                console.log(chalk.inverse("-------------------------------------------"));
+                writeLog("Search " + key + " by " + type + " at ", "success");
+            } else {//search default
                 console.log(chalk.red.bold("Movie not found!"));
+                writeLog("Search " + key + " by " + type + " at ", "fail");
                 console.log(chalk.blue.bold("I found you somthing instead : "));
-                //defautlt search
-                search("movie", key.omdb.prefix + "Mr. Nobody");
+                //search default
+                checkCatalog("Mr. Nobody.","movie");
             }
         } else if (type == "band") {
             //concert format
@@ -88,21 +98,26 @@ function search(type, url) {
                         //moment    2019-06-28T19:00:52
                         //console.log(data[i].datetime.split("T"));
                         console.log(chalk.inverse("Date : " + data[i].datetime.split("T")[1] + " on " + moment(data[i].datetime.split("T")[0]).format("MM/DD/YYYY")));
+                        console.log(chalk.inverse("-------------------------------------------"));
                     }
+                    writeLog("Search " + key + " by " + type + " at ", "success");
                 } else {
                     //no events
                     console.log(chalk.inverse("No upcomging event!"));
+                    writeLog("Search " + key + " by " + type + " at ", "success");
                 }
             } else {
                 console.log(chalk.red.bold("Can not find your band!"));
+                writeLog("Search " + key + " by " + type + " at ", "fail");
             }
         } else {
-            return console.log("wrong type");
+            console.log("wrong type");
+            writeLog("Search " + key + " by " + type + " at ", "fail");
         }
     });
 }
 //spotify api and format display
-function searchSpotify(keyWord) {
+function searchSpotify(keyWord, type) {
     var spotify = new Spotify(key.spotify);
     spotify.search({//search for a track
         type: "track",
@@ -133,66 +148,59 @@ function searchSpotify(keyWord) {
                 console.log(chalk.inverse("Preview link : " + tracks[i].preview_url));
                 //album
                 console.log(chalk.inverse("Album : " + tracks[i].album.name));
+                console.log(chalk.inverse("-------------------------------------------"));
             }
+            writeLog("Search " + keyWord + " by " + type + " at ", "success");
         } else {
             console.log(chalk.red.bold("Can not find any song named " + keyWord + " for you."));
-            console.log(chalk.blue.bold("I found 'The Sign' for you."));
-            searchSpotify("The Sign");
+            writeLog("Search " + keyWord + " by " + type + " at ", "fail");
+            //search default
+            console.log(chalk.red.bold("I found something instead."));
+            checkCatalog("The Sign", "song");
         }
     });
 }
 //check type and form queryurl with keyword
 //write log when the search is done
 function checkCatalog(str1, str2) {
-        console.log(chalk.blue.bold("Lori is searching for ") + chalk.green.bold(str1) + chalk.blue.bold("."));
-        var query;
-        switch (str2) {
-            case "song":
-                if (searchSpotify(str1)) {
-                    writeLog("Search " + str1 + " by " + str2 + " at ", "success");
-                } else {
-                    writeLog("Search " + str1 + " by " + str2 + " at ", "fail");
+    console.log(chalk.blue.bold("Lori is searching for ") + chalk.green.bold(str1) + chalk.blue.bold("."));
+    var query;
+    switch (str2) {
+        case "song"://search for song 
+            searchSpotify(str1, str2)
+            break;
+        case "movie"://search for movie
+            query = key.omdb.prefix + str1;
+            search(str1, str2, query);
+            break;
+        case "band"://search for concerts
+            query = key.bit.prefix + str1 + key.bit.id;
+            search(str1, str2, query);
+            break;
+        case "file"://search for a file to get command
+            //read file function
+            if (str1.split(".")[1] == "txt") {//check suffix 
+                console.log(chalk.blue.bold("Lori is reading the file."));
+                var fileCommand = readCommand(str1);
+                if(typeof fileCommand == "string"){
+                    console.log(chalk.red.bold(fileCommand));
+                }else{//cmdObj
+                    checkCatalog(fileCommand.fileKey,fileCommand.fileCatalog);
                 }
-                break;
-            case "movie":
-                query = key.omdb.prefix + str1;
-                if (search(str2, query)) {
-                    writeLog("Search " + str1 + " by " + str2 + " at ", "success");
-                } else {
-                    writeLog("Search " + str1 + " by " + str2 + " at ", "fail");
-                }
-                break;
-            case "band":
-                query = key.bit.prefix + str1 + key.bit.id;
-                if (search(str2, query)) {
-                    writeLog("Search " + str1 + " by " + str2 + " at ", "success");
-                } else {
-                    writeLog("Search " + str1 + " by " + str2 + " at ", "fail");
-                }
-                break;
-            case "file":
-                //read file function
-                if (str2.split(".")[1] == "txt") {//check suffix 
-                    console.log(chalk.blue.bold("Lori is reading the file."));
-                    var fileCommand = readCommand(str1);
-                    //checkCatalog(fileCommand.fileKey,fileCommand.fileCatalog);
-                    if(fileCommand != "Can not do this"){
-                        checkCatalog(fileCommand.fileKey, fileCommand.fileCatalog);
-                        writeLog("Search " + str1 + " by " + sr2 + " at ", "success");
-                    }else{
-                        writeLog("Search " + str1 + " by " + str2 + " at ", "fail");
-                    }
-                } else {
-                    console.log(chalk.red.bold("Cannot read file " + str1));
-                }
-                break;
-            default://in case in put from expand went wrong //not necessary
-                //save failure info to log
-                console.log(chalk.red.bold("I cannot search for " + str2));
-                console.log(chalk.red.bold("Please wait for further update"));
+            }
+            else {
+                console.log(chalk.red.bold("Cannot read file " + str1));
                 writeLog("Search " + str1 + " by " + str2 + " at ", "fail");
-                welcome();//go back to main function if input from last prompt goes wrong
-        }
+            }
+
+            break;
+        default://in case in put from expand went wrong //not necessary
+            //save failure info to log
+            console.log(chalk.red.bold("I cannot search for " + str2));
+            console.log(chalk.red.bold("Please wait for further update"));
+            writeLog("Search " + str1 + " by " + str2 + " at ", "fail");
+            welcome();//go back to main function if input from last prompt goes wrong
+    }
 }
 //main function 
 function welcome() {
@@ -253,7 +261,7 @@ function welcome() {
                                 console.log(chalk.blue.bold("Thank you for using Lori the Bot!"));
                             }
                         });
-                    }else{//quit
+                    } else {//quit
                         console.log(chalk.blue.bold("Thank you for using Lori the Bot!"));
                     }
                 });
